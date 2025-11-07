@@ -32,13 +32,33 @@ async function createBooksTable() {
   console.log("Books table ready!");
 }
 
+// Function to set CORS headers
+function setCorsHeaders(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*"); // allow any origin
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+}
+
 // Handle requests
 const requestHandler = async (req, res) => {
+  setCorsHeaders(res);
+
+  // Handle preflight request for CORS
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    return res.end();
+  }
+
   if (req.url === "/" && req.method === "GET") {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("Server is running\n");
   } 
-  // Add book
   else if (req.url === "/add-book" && req.method === "POST") {
     try {
       const { title, author, published_year } = await parseBody(req);
@@ -57,7 +77,6 @@ const requestHandler = async (req, res) => {
       res.end(JSON.stringify({ error: "Invalid request or database error" }));
     }
   } 
-  // Get all books
   else if (req.url === "/books" && req.method === "GET") {
     try {
       const books = await sql`SELECT * FROM books ORDER BY id ASC`;
